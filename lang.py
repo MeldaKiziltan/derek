@@ -36,6 +36,8 @@ import numpy as np
 import pygame
 from dotenv import load_dotenv
 
+import pygame
+from PIL import Image
 # Load .env file and get API key
 load_dotenv()
 API_KEY = os.getenv("COHERE_API_KEY")
@@ -45,20 +47,53 @@ co = cohere.Client(API_KEY)
 pygame.init()
 screen = pygame.display.set_mode((800, 480))  # Set this to match your screen resolution
 
-def display_gif(gif_path):
-    """Function to display a GIF on the Raspberry Pi using Pygame."""
-    clock = pygame.time.Clock()
-    gif = pygame.image.load(gif_path)
 
+import pygame
+import sys
+from pathlib import Path
+from PIL import Image, ImageSequence
+
+def display_gif(gif_path):
+    pygame.init()
+    
+    try:
+        gif = Image.open(gif_path)
+    except IOError:
+        print(f"Error: Unable to open file '{gif_path}'")
+        return
+
+    frames = []
+    durations = []
+    for frame in ImageSequence.Iterator(gif):
+        pygame_image = pygame.image.fromstring(
+            frame.convert("RGBA").tobytes(), frame.size, "RGBA")
+        frames.append(pygame_image)
+        durations.append(frame.info.get('duration', 100))  # Default to 100ms if not specified
+
+    if not frames:
+        print(f"Error: No frames found in '{gif_path}'")
+        return
+
+    screen = pygame.display.set_mode(frames[0].get_size())
+    pygame.display.set_caption(Path(gif_path).stem)
+    
+    clock = pygame.time.Clock()
+    current_frame = 0
+    time_elapsed = 0
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
 
-        screen.blit(gif, (0, 0))
-        pygame.display.update()
-        clock.tick(10)  # Adjust the frame rate if using animated GIFs
+        screen.blit(frames[current_frame], (0, 0))
+        pygame.display.flip()
+
+        time_elapsed += clock.tick()
+        if time_elapsed >= durations[current_frame]:
+            time_elapsed = 0
+            current_frame = (current_frame + 1) % len(frames)
 
 def generate_sassy_response(input_number, wall_e):
     # Define prompt template based on whether Wall-E is in the picture
@@ -90,11 +125,11 @@ def generate_sassy_response(input_number, wall_e):
 def choose_gif(input_number, wall_e):
     """Selects the appropriate GIF based on the input number or Wall-E's presence."""
     if wall_e:
-        return "M-O_face_assets/GIFS/wall-e_mad.gif"  # Replace with actual path to Wall-E GIF
+        return "M-O_face_assets/GIFS/wall-e_mad.gif"  # Evil mad
     elif input_number == 0:
-        return "M-O_face_assets/GIFS/blinking_gif.gif"  # GIF for when there's a lot of dirt
+        return "M-O_face_assets/GIFS/blinking_gif.gif"  # Chill
     else:
-        return "M-O_face_assets/GIFS/angry_dirt_gif.gif"  # GIF for a clean area
+        return "M-O_face_assets/GIFS/angry_dirt_gif.gif"  # MUST CLEAN
 
 # Main logic
 if __name__ == "__main__":
@@ -102,9 +137,13 @@ if __name__ == "__main__":
     wall_e = True  # Change this to True if Wall-E is detected
 
     # Generate the sassy response
-    response = generate_sassy_response(input_number, wall_e)
-    print(response)
+    # response = generate_sassy_response(input_number, wall_e)
+    # print(response)
 
     # Choose and display the appropriate GIF
+
     gif_path = choose_gif(input_number, wall_e)
+
+    print(gif_path)
+    
     display_gif(gif_path)
