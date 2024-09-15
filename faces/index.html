@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Full Screen GIF</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      #gif-container {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gif-container"></div>
+
+    <script>
+      const gifContainer = document.getElementById("gif-container");
+      const gifs = [
+        "blinking_gif.gif",
+        "angry_dirt_gif.gif",
+        "wall-e_mad.gif",
+        "red_final_repeat.gif",
+      ];
+
+      let currentGifIndex = -1;
+
+      function changeGif(index) {
+        if (index === currentGifIndex || (currentGifIndex === 3 && index === 2))
+          return;
+
+        currentGifIndex = index;
+        gifContainer.style.backgroundImage = `url(${gifs[index]})`;
+
+        // Add listener for the third GIF
+        if (index === 2) {
+          const img = new Image();
+          img.src = gifs[index];
+          img.onload = function () {
+            console.log("start");
+            setTimeout(() => {
+              changeGif(3);
+            }, 5900); // Multiply by 1000 to convert to milliseconds
+          };
+        }
+      }
+
+      // Set initial GIF
+      changeGif(0);
+
+      // Listen for keypress events
+      document.addEventListener("keypress", (event) => {
+        const key = event.key;
+        if (key >= "1" && key <= "3") {
+          changeGif(parseInt(key) - 1);
+        }
+      });
+    </script>
+  </body>
+</html>

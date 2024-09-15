@@ -14,6 +14,7 @@ import pyttsx3
 import os
 import cohere
 from dotenv import load_dotenv
+import pyautogui
 
 load_dotenv()
 
@@ -102,17 +103,19 @@ async def viam_update():
         print(camera_readings)
         dirt_counter = camera_readings['redSquares']
         if camera_readings['legoWalle'] == 'True' or camera_readings['paperWalle'] == 'True':
+            pyautogui.press('3')
             rant = generate_sassy_response(0, True)
             engine.say(rant, "WallE_rant")
-        # send camera readings for sentiment AI
-
-        if dirt_counter > 3:
+        elif dirt_counter > 3:
+            pyautogui.press('2')
             rant = generate_sassy_response(dirt_counter, False)
             engine.say(rant, "Dirt_rant")
             right_go = asyncio.create_task(right.go_for(60,-8))
             left_go = asyncio.create_task(left.go_for(60, -8))
             _ = await right_go
             _ = await left_go
+        else:
+            pyautogui.press('1')
         await asyncio.sleep(2)
 
     # Closes the machine after reading
